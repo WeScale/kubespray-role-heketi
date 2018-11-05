@@ -1,0 +1,109 @@
+---
+
+- name: "Kubernetes Apps | Wait for daemonset to become available."
+  register: "daemonset_state"
+  command: >-
+    {{ bin_dir }}/kubectl -n kube-system
+    get daemonset glusterfs-provisioner
+    --output=json --ignore-not-found=true
+  changed_when: false
+  vars:
+    daemonset_state: { stdout: "{}" }
+    ready: "{{ daemonset_state.stdout|from_json|json_query(\"status.numberReady\") }}"
+    desired: "{{ daemonset_state.stdout|from_json|json_query(\"status.desiredNumberScheduled\") }}"
+  until: "ready | int >= 3"
+  retries: 60
+  delay: 5
+
+- name: "Kubernetes Apps | Lay Down Heketi Service Account"
+  template:
+    src: "heketi-service-account.json.j2"
+    dest: "{{ kube_config_dir }}/heketi-service-account.json"
+  register: "rendering"
+
+- name: "Kubernetes Apps | Install and configure Heketi Service Account"
+  kube:
+    name: "GlusterFS"
+    kubectl: "{{ bin_dir }}/kubectl"
+    namespace: "{{ heketi_namespace }}"
+    filename: "{{ kube_config_dir }}/heketi-service-account.json"
+    state: "{{ rendering.changed | ternary('latest', 'present') }}"
+
+
+- name: "Kubernetes Apps | Lay Down Heketi psp"
+  template:
+    src: "heketi-psp.yml.j2"
+    dest: "{{ kube_config_dir }}/heketi-psp.yml"
+  register: "rendering"
+
+- name: "Kubernetes Apps | Install and configure Heketi clusterrole"
+  kube:
+    name: "{{ heketi_name }}-psp"
+    kubectl: "{{ bin_dir }}/kubectl"
+    namespace: "{{ heketi_namespace }}"
+    filename: "{{ kube_config_dir }}/heketi-psp.yml"
+    state: "{{ rendering.changed | ternary('latest', 'present') }}"
+
+
+- name: "Kubernetes Apps | Lay Down Heketi clusterrole"
+  template:
+    src: "heketi-clusterrole.yml.j2"
+    dest: "{{ kube_config_dir }}/heketi-clusterrole.yml"
+  register: "rendering"
+
+- name: "Kubernetes Apps | Install and configure Heketi clusterrole"
+  kube:
+    name: "{{ heketi_name }}-clusterrole"
+    kubectl: "{{ bin_dir }}/kubectl"
+    namespace: "{{ heketi_namespace }}"
+    filename: "{{ kube_config_dir }}/heketi-clusterrole.yml"
+    state: "{{ rendering.changed | ternary('latest', 'present') }}"
+
+- name: "Kubernetes Apps | Lay Down Heketi clusterrolebinding"
+  template:
+    src: "heketi-clusterrolebinding.yml.j2"
+    dest: "{{ kube_config_dir }}/heketi-clusterrolebinding.yml"
+  register: "rendering"
+
+- name: "Kubernetes Apps | Install and configure Heketi clusterrole binding"
+  kube:
+    name: "{{ heketi_name }}-clusterrolebinding"
+    kubectl: "{{ bin_dir }}/kubectl"
+    namespace: "{{ heketi_namespace }}"
+    filename: "{{ kube_config_dir }}/heketi-clusterrolebinding.yml"
+    state: "{{ rendering.changed | ternary('latest', 'present') }}"
+
+
+
+
+
+
+
+
+- name: "Kubernetes Apps | Lay Down Heketi role"
+  template:
+    src: "heketi-role.yml.j2"
+    dest: "{{ kube_config_dir }}/heketi-role.yml"
+  register: "rendering"
+
+- name: "Kubernetes Apps | Install and configure Heketi clusterrole"
+  kube:
+    name: "{{ heketi_name }}-role"
+    kubectl: "{{ bin_dir }}/kubectl"
+    namespace: "{{ heketi_namespace }}"
+    filename: "{{ kube_config_dir }}/heketi-role.yml"
+    state: "{{ rendering.changed | ternary('latest', 'present') }}"
+
+- name: "Kubernetes Apps | Lay Down Heketi clusterrolebinding"
+  template:
+    src: "heketi-rolebinding.yml.j2"
+    dest: "{{ kube_config_dir }}/heketi-rolebinding.yml"
+  register: "rendering"
+
+- name: "Kubernetes Apps | Install and configure Heketi clusterrole binding"
+  kube:
+    name: "{{ heketi_name }}-rolebinding"
+    kubectl: "{{ bin_dir }}/kubectl"
+    namespace: "{{ heketi_namespace }}"
+    filename: "{{ kube_config_dir }}/heketi-rolebinding.yml"
+    state: "{{ rendering.changed | ternary('latest', 'present') }}"

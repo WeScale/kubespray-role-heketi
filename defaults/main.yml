@@ -1,0 +1,4 @@
+---
+heketi_name: "heketi"
+heketi_deploy_name: "{{ heketi_name }}-deploy"
+heketi_namespace: "kube-system"

@@ -1,0 +1,58 @@
+---
+apiVersion: policy/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  name: {{ heketi_name }}
+  annotations:
+    seccomp.security.alpha.kubernetes.io/defaultProfileName:  'docker/default'
+    seccomp.security.alpha.kubernetes.io/allowedProfileNames: 'docker/default'
+  labels:
+    kubernetes.io/cluster-service: 'true'
+    addonmanager.kubernetes.io/mode: Reconcile
+spec:
+  privileged: true
+  allowPrivilegeEscalation: false
+  requiredDropCapabilities:
+    - ALL
+  volumes:
+    - 'configMap'
+    - 'emptyDir'
+    - 'projected'
+    - 'secret'
+    - 'downwardAPI'
+    - 'persistentVolumeClaim'
+  allowedHostPaths:
+
+    - pathPrefix: "/var/lib/heketi"
+      readOnly: false
+    - pathPrefix: "/run/lvm"
+      readOnly: false
+    - pathPrefix: "/etc/glusterfs"
+      readOnly: false
+    - pathPrefix: "/var/log/glusterfs"
+      readOnly: false
+    - pathPrefix: "/var/lib/glusterd"
+      readOnly: false
+    - pathPrefix: "/dev"
+      readOnly: false
+    - pathPrefix: "/sys/fs/cgroup"
+      readOnly: false
+
+  hostNetwork: false
+  hostIPC: false
+  hostPID: false
+  runAsUser:
+    rule: 'RunAsAny'
+  seLinux:
+    rule: 'RunAsAny'
+  supplementalGroups:
+    rule: 'MustRunAs'
+    ranges:
+      - min: 1
+        max: 65535
+  fsGroup:
+    rule: 'MustRunAs'
+    ranges:
+      - min: 1
+        max: 65535
+  readOnlyRootFilesystem: false
