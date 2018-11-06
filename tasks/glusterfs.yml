@@ -4,7 +4,7 @@
   register: "daemonset_state"
   command: >-
     {{ bin_dir }}/kubectl -n kube-system
-    get daemonset glusterfs-provisioner
+    get daemonset gluster-provisioner
     --output=json --ignore-not-found=true
   changed_when: false
   vars:
