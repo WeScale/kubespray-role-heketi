@@ -28,6 +28,7 @@
     namespace: "{{ heketi_namespace }}"
     filename: "{{ kube_config_dir }}/heketi-service-account.json"
     state: "{{ rendering.changed | ternary('latest', 'present') }}"
+  when: inventory_hostname == groups['kube-master'][0]
 
 
 - name: "Kubernetes Apps | Lay Down Heketi psp"
@@ -43,6 +44,7 @@
     namespace: "{{ heketi_namespace }}"
     filename: "{{ kube_config_dir }}/heketi-psp.yml"
     state: "{{ rendering.changed | ternary('latest', 'present') }}"
+  when: inventory_hostname == groups['kube-master'][0]
 
 
 - name: "Kubernetes Apps | Lay Down Heketi clusterrole"
@@ -58,6 +60,7 @@
     namespace: "{{ heketi_namespace }}"
     filename: "{{ kube_config_dir }}/heketi-clusterrole.yml"
     state: "{{ rendering.changed | ternary('latest', 'present') }}"
+  when: inventory_hostname == groups['kube-master'][0]
 
 - name: "Kubernetes Apps | Lay Down Heketi clusterrolebinding"
   template:
@@ -72,12 +75,7 @@
     namespace: "{{ heketi_namespace }}"
     filename: "{{ kube_config_dir }}/heketi-clusterrolebinding.yml"
     state: "{{ rendering.changed | ternary('latest', 'present') }}"
-
-
-
-
-
-
+  when: inventory_hostname == groups['kube-master'][0]
 
 
 - name: "Kubernetes Apps | Lay Down Heketi role"
@@ -86,15 +84,17 @@
     dest: "{{ kube_config_dir }}/heketi-role.yml"
   register: "rendering"
 
-- name: "Kubernetes Apps | Install and configure Heketi clusterrole"
+- name: "Kubernetes Apps | Install and configure Heketi role"
   kube:
     name: "{{ heketi_name }}-role"
     kubectl: "{{ bin_dir }}/kubectl"
     namespace: "{{ heketi_namespace }}"
     filename: "{{ kube_config_dir }}/heketi-role.yml"
     state: "{{ rendering.changed | ternary('latest', 'present') }}"
+  when: inventory_hostname == groups['kube-master'][0]
 
-- name: "Kubernetes Apps | Lay Down Heketi clusterrolebinding"
+
+- name: "Kubernetes Apps | Lay Down Heketi rolebinding"
   template:
     src: "heketi-rolebinding.yml.j2"
     dest: "{{ kube_config_dir }}/heketi-rolebinding.yml"
@@ -107,3 +107,4 @@
     namespace: "{{ heketi_namespace }}"
     filename: "{{ kube_config_dir }}/heketi-rolebinding.yml"
     state: "{{ rendering.changed | ternary('latest', 'present') }}"
+  when: inventory_hostname == groups['kube-master'][0]
