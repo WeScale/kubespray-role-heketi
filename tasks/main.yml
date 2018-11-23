@@ -3,5 +3,4 @@
   when: inventory_hostname in groups['kube-node']
 
 - include_tasks: master.yml
-  when: inventory_hostname in groups['kube-master']
-  run_once: yes
+  when: inventory_hostname == groups['kube-master'][0]
